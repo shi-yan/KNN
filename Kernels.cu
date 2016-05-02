@@ -145,7 +145,6 @@ __host__ bool kNN(unsigned int *matrixBuffer, const unsigned int num_items, unsi
 
     success = true;
 cleanup:
-    return true;
     if (matrixTexObj)
     {
         cudaDestroyTextureObject(matrixTexObj);

@@ -12,7 +12,8 @@ INCLUDEPATH += /usr/local/cuda-7.5/include \
 
 CUDA_SOURCES += Kernels.cu
 
-OTHER_FILES +=  Kernels.cu
+OTHER_FILES +=  Kernels.cu \
+                README.md
 
 NVCCFLAGS = --use_fast_math -arch sm_30 -m64
 CUDA_INC = $$join(INCLUDEPATH,' -I',' -I',' ')
