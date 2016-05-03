@@ -7,7 +7,8 @@ CONFIG -= app_bundle
 TEMPLATE = app
 
 INCLUDEPATH += /usr/local/cuda-7.5/include \
-               /home/shiy/cub-1.5.2
+               $$PWD/cub \
+               $$PWD/moderngpu/src
 
 
 CUDA_SOURCES += Kernels.cu
@@ -15,7 +16,7 @@ CUDA_SOURCES += Kernels.cu
 OTHER_FILES +=  Kernels.cu \
                 README.md
 
-NVCCFLAGS = --use_fast_math -arch sm_30 -m64
+NVCCFLAGS = --use_fast_math -arch sm_30 -m64 -std=c++11 --expt-extended-lambda
 CUDA_INC = $$join(INCLUDEPATH,' -I',' -I',' ')
 
 CONFIG(debug, debug|release) {

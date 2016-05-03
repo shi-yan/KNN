@@ -2,9 +2,13 @@
 #include <cuda_runtime.h>
 #include <cstdio>
 #include <cub/cub.cuh>
+#include <moderngpu/kernel_mergesort.hxx>
 
 const int vectorSize = 25;
 const int vectorPerBlock = 1024;
+
+using namespace mgpu;
+
 
 __global__ void distanceKernel(unsigned int* keyOutput, unsigned int *valueOutput, unsigned int *query, cudaTextureObject_t texObj, unsigned int texHeight)
 {
@@ -58,6 +62,8 @@ __host__ bool kNN(unsigned int *matrixBuffer, const unsigned int num_items, unsi
     cub::CachingDeviceAllocator  cubAllocator(true);
     cub::DoubleBuffer<unsigned int> keys_device;
     cub::DoubleBuffer<unsigned int> values_device;
+    standard_context_t context;
+
 
     error = cudaMallocArray(&matrixArray_device, &channelDesc, vectorSize * vectorPerBlock, texHeight);
     if (cudaSuccess != error)
@@ -130,7 +136,7 @@ __host__ bool kNN(unsigned int *matrixBuffer, const unsigned int num_items, unsi
         printf("debug: %d, %d, %d\n", debugKey[1025], debugKey[500], debugKey[502]);
     }*/
 
-    keys_device.d_buffers[keys_device.selector] = keyResultArray_device;
+  /*  keys_device.d_buffers[keys_device.selector] = keyResultArray_device;
     values_device.d_buffers[values_device.selector] = valueResultArray_device;
     CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[keys_device.selector ^ 1], sizeof(unsigned int) * num_items));
     CubDebugExit(cubAllocator.DeviceAllocate((void**)&values_device.d_buffers[values_device.selector ^ 1], sizeof(unsigned int) * num_items));
@@ -140,8 +146,18 @@ __host__ bool kNN(unsigned int *matrixBuffer, const unsigned int num_items, unsi
 
     // Run
     CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, keys_device, values_device, num_items));
-
     cudaMemcpy(result, values_device.Current(), sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
+*/
+
+
+
+    mgpu::mergesort(keyResultArray_device, valueResultArray_device, num_items, less_t<unsigned int>(), context);
+
+
+    context.synchronize();
+
+
+    cudaMemcpy(result,valueResultArray_device, sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
 
     success = true;
 cleanup:

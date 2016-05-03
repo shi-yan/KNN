@@ -4,14 +4,20 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <QElapsedTimer>
+#include <QDebug>
+
 const int vectorSize = 25;
 const int vectorPerBlock = 1024;
 const int testMatrixHeight = 16384;
 
 extern __host__ bool kNN(unsigned int *matrixBuffer, const unsigned int matrixSize, unsigned int query[25], unsigned int *result, const unsigned int resultSize);
 
+
 int main(int argc, char *argv[])
 {
+
+
     int deviceCount;
     cudaGetDeviceCount(&deviceCount);
     int device;
@@ -29,6 +35,7 @@ int main(int argc, char *argv[])
     size_t totalMem = 0;
     cudaMemGetInfo(&freeMem, &totalMem);
     printf("available video memory: %ld, %ld (bytes)\n", freeMem, totalMem);
+
 
     const size_t bufferSize = vectorPerBlock * vectorSize * testMatrixHeight;
     unsigned int *matrixBuffer = new unsigned int[bufferSize];
@@ -55,8 +62,11 @@ int main(int argc, char *argv[])
     const int resultCount = 30;
     unsigned int result[resultCount] = {0};
 
+    QElapsedTimer benchTimer;
+    benchTimer.start();
     if (kNN(matrixBuffer, vectorPerBlock  * testMatrixHeight, query, result, resultCount)) {
 
+        qDebug() <<"timer:"<< benchTimer.elapsed();
         printf("%d nearest neighbors:\n", resultCount);
         for(int i=0;i<resultCount;++i)
         {
