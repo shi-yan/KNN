@@ -39,8 +39,12 @@ DISTFILES += \
     Kernels.cu
 
 LIBS += -L/usr/local/cuda-7.5/lib64 \
-        -lcudart
+        -lcudart \
+        -lgomp
 
 
 
 SOURCES += main.cpp
+
+HEADERS += \
+    kernels.h
