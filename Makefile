@@ -13,10 +13,10 @@ CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
 CFLAGS        = -m64 -pipe -O2 -Wall -W -D_REENTRANT $(DEFINES)
 CXXFLAGS      = -m64 -pipe -O2 -Wall -W -D_REENTRANT $(DEFINES)
-INCPATH       = -I/usr/share/qt4/mkspecs/linux-g++-64 -I. -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4 -I/usr/local/cuda-7.5/include -Icub -Imoderngpu/src -I.
+INCPATH       = -I/usr/share/qt4/mkspecs/linux-g++-64 -I. -I/usr/local/cuda-7.5/include -Icub -Imoderngpu/src -I.
 LINK          = g++
 LFLAGS        = -m64 -Wl,-O1
-LIBS          = $(SUBLIBS)  -L/usr/lib/x86_64-linux-gnu -L/usr/local/cuda-7.5/lib64 -lcudart -lQtGui -lQtCore -lpthread 
+LIBS          = $(SUBLIBS)  -L/usr/lib/x86_64-linux-gnu -L/usr/local/cuda-7.5/lib64 -lcudart -lpthread 
 AR            = ar cqs
 RANLIB        = 
 QMAKE         = /usr/lib/x86_64-linux-gnu/qt4/bin/qmake
@@ -104,63 +104,7 @@ all: Makefile $(TARGET)
 $(TARGET):  $(OBJECTS)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJECTS) $(OBJCOMP) $(LIBS)
 
-Makefile: KNN.pro  /usr/share/qt4/mkspecs/linux-g++-64/qmake.conf /usr/share/qt4/mkspecs/common/unix.conf \
-		/usr/share/qt4/mkspecs/common/linux.conf \
-		/usr/share/qt4/mkspecs/common/gcc-base.conf \
-		/usr/share/qt4/mkspecs/common/gcc-base-unix.conf \
-		/usr/share/qt4/mkspecs/common/g++-base.conf \
-		/usr/share/qt4/mkspecs/common/g++-unix.conf \
-		/usr/share/qt4/mkspecs/qconfig.pri \
-		/usr/share/qt4/mkspecs/modules/qt_phonon.pri \
-		/usr/share/qt4/mkspecs/features/qt_functions.prf \
-		/usr/share/qt4/mkspecs/features/qt_config.prf \
-		/usr/share/qt4/mkspecs/features/exclusive_builds.prf \
-		/usr/share/qt4/mkspecs/features/default_pre.prf \
-		/usr/share/qt4/mkspecs/features/release.prf \
-		/usr/share/qt4/mkspecs/features/default_post.prf \
-		/usr/share/qt4/mkspecs/features/shared.prf \
-		/usr/share/qt4/mkspecs/features/unix/gdb_dwarf_index.prf \
-		/usr/share/qt4/mkspecs/features/warn_on.prf \
-		/usr/share/qt4/mkspecs/features/qt.prf \
-		/usr/share/qt4/mkspecs/features/unix/thread.prf \
-		/usr/share/qt4/mkspecs/features/moc.prf \
-		/usr/share/qt4/mkspecs/features/resources.prf \
-		/usr/share/qt4/mkspecs/features/uic.prf \
-		/usr/share/qt4/mkspecs/features/yacc.prf \
-		/usr/share/qt4/mkspecs/features/lex.prf \
-		/usr/share/qt4/mkspecs/features/include_source_dir.prf \
-		/usr/lib/x86_64-linux-gnu/libQtGui.prl \
-		/usr/lib/x86_64-linux-gnu/libQtCore.prl
-	$(QMAKE) -o Makefile KNN.pro
-/usr/share/qt4/mkspecs/common/unix.conf:
-/usr/share/qt4/mkspecs/common/linux.conf:
-/usr/share/qt4/mkspecs/common/gcc-base.conf:
-/usr/share/qt4/mkspecs/common/gcc-base-unix.conf:
-/usr/share/qt4/mkspecs/common/g++-base.conf:
-/usr/share/qt4/mkspecs/common/g++-unix.conf:
-/usr/share/qt4/mkspecs/qconfig.pri:
-/usr/share/qt4/mkspecs/modules/qt_phonon.pri:
-/usr/share/qt4/mkspecs/features/qt_functions.prf:
-/usr/share/qt4/mkspecs/features/qt_config.prf:
-/usr/share/qt4/mkspecs/features/exclusive_builds.prf:
-/usr/share/qt4/mkspecs/features/default_pre.prf:
-/usr/share/qt4/mkspecs/features/release.prf:
-/usr/share/qt4/mkspecs/features/default_post.prf:
-/usr/share/qt4/mkspecs/features/shared.prf:
-/usr/share/qt4/mkspecs/features/unix/gdb_dwarf_index.prf:
-/usr/share/qt4/mkspecs/features/warn_on.prf:
-/usr/share/qt4/mkspecs/features/qt.prf:
-/usr/share/qt4/mkspecs/features/unix/thread.prf:
-/usr/share/qt4/mkspecs/features/moc.prf:
-/usr/share/qt4/mkspecs/features/resources.prf:
-/usr/share/qt4/mkspecs/features/uic.prf:
-/usr/share/qt4/mkspecs/features/yacc.prf:
-/usr/share/qt4/mkspecs/features/lex.prf:
-/usr/share/qt4/mkspecs/features/include_source_dir.prf:
-/usr/lib/x86_64-linux-gnu/libQtGui.prl:
-/usr/lib/x86_64-linux-gnu/libQtCore.prl:
-qmake:  FORCE
-	@$(QMAKE) -o Makefile KNN.pro
+
 
 dist: 
 	@$(CHK_DIR_EXISTS) .tmp/KNN1.0.0 || $(MKDIR) .tmp/KNN1.0.0 
