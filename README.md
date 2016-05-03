@@ -10,12 +10,17 @@
 
 ## Early Benchmark Results
 
-sort using cub radix sort
+### sort using cub radix sort
+
 find 30 nearest neighbors for 100 times in 16777216 vectors 
+
  [0.280620 secs for io, 0.032426 secs for each query]:
 
-sort using mgpu merge sort
+
+### sort using mgpu merge sort
+
 find 30 nearest neighbors for 100 times in 16777216 vectors 
+
  [0.281592 secs for io, 0.054164 secs for each query]:
 
 
