@@ -8,9 +8,9 @@
 const int vectorPerBlock = 1024;
 const int vectorSize = 25;
 
-__global__ void distanceKernel(unsigned int* keyOutput, unsigned int *valueOutput, unsigned int *query, cudaTextureObject_t texObj, unsigned int texHeight)
+__global__ void distanceKernel(unsigned short* keyOutput, unsigned int *valueOutput, unsigned int *query, cudaTextureObject_t texObj, unsigned int texHeight)
 {
-    int tu = blockDim.x * blockIdx.x;
+    int tu = blockIdx.x;
     int tv = threadIdx.x;
 
     if (tu <texHeight && tv <vectorPerBlock)
@@ -24,7 +24,7 @@ __global__ void distanceKernel(unsigned int* keyOutput, unsigned int *valueOutpu
 
         __syncthreads();
 
-        unsigned int count = 0;
+        unsigned short count = 0;
 
         for (int i = 0; i<vectorSize;++i)
         {
@@ -45,11 +45,11 @@ static int texHeight = 0;
 static cudaArray *matrixArray_device = 0;
 static cudaTextureObject_t matrixTexObj = 0;
 static unsigned int *query_device = 0;
-static unsigned int *keyResultArray_device = 0;
+static unsigned short *keyResultArray_device = 0;
 static unsigned int *valueResultArray_device = 0;
 static size_t  tempStorageBytes  = 0;
 static void    *tempStorage_device     = NULL;
-static cub::DoubleBuffer<unsigned int> keys_device;
+static cub::DoubleBuffer<unsigned short> keys_device;
 static cub::DoubleBuffer<unsigned int> values_device;
 static mgpu::standard_context_t *context;
 static unsigned int num_items = 0;
@@ -170,9 +170,9 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
     if (sortAlgorithm == CUB_RADIX_SORT)
     {
         cub::CachingDeviceAllocator cubAllocator(true);
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[0], sizeof(unsigned int) * num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[0], sizeof(unsigned short) * num_items));
         CubDebugExit(cubAllocator.DeviceAllocate((void**)&values_device.d_buffers[0], sizeof(unsigned int) * num_items));
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[1], sizeof(unsigned int) * num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[1], sizeof(unsigned short) * num_items));
         CubDebugExit(cubAllocator.DeviceAllocate((void**)&values_device.d_buffers[1], sizeof(unsigned int) * num_items));
         CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, keys_device, values_device, num_items));
 
@@ -186,7 +186,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
     {
         context = new mgpu::standard_context_t;
 
-        error = cudaMalloc(&keyResultArray_device, sizeof(unsigned int) * num_items);
+        error = cudaMalloc(&keyResultArray_device, sizeof(unsigned short) * num_items);
         if (cudaSuccess != error)
         {
             printf("can't allocate for key\n");
@@ -194,7 +194,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
             return false;
         }
 
-        error = cudaMalloc(&valueResultArray_device, sizeof(unsigned int) * num_items);
+        error = cudaMalloc(&valueResultArray_device, sizeof(unsigned short) * num_items);
         if (cudaSuccess != error)
         {
             printf("can't allocate for value\n");
