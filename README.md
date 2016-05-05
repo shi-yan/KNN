@@ -14,14 +14,14 @@
 
 find 30 nearest neighbors for 100 times in 16777216 vectors 
 
- [0.280620 secs for io, 0.032426 secs for each query]:
-
+ [0.279170 secs for io, 0.064548 secs for each query]:
 
 ### sort using mgpu merge sort
 
 find 30 nearest neighbors for 100 times in 16777216 vectors 
 
- [0.281592 secs for io, 0.054164 secs for each query]:
+ [0.282051 secs for io, 0.112742 secs for each query]:
+
 
 
 ## todo:

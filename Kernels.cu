@@ -8,6 +8,47 @@
 const int vectorPerBlock = 1024;
 const int vectorSize = 25;
 
+// popcll is slower, don't use it
+/*__global__ void distanceKernel(unsigned short* keyOutput, unsigned int *valueOutput, unsigned int *query, cudaTextureObject_t texObj, unsigned int texHeight)
+{
+    int tu = blockIdx.x;
+    int tv = threadIdx.x;
+
+    if (tu <texHeight && tv <vectorPerBlock)
+    {
+        __shared__ unsigned int queryLocal[vectorSize];
+
+        if (tv < vectorSize)
+        {
+            queryLocal[tv] = query[tv];
+        }
+
+        __syncthreads();
+
+        unsigned short count = 0;
+        unsigned int offset = tv * vectorSize;
+
+        for (int i = 0; i < vectorSize ; i += 2)
+        {
+            unsigned int m[2] = {0};
+            m[0] = tex2D<unsigned int>(texObj, offset + i, tu);
+            m[1] = tex2D<unsigned int>(texObj, offset + i + 1, tu);
+            count += __popcll(*((unsigned long long*)m) ^ *((unsigned long long*)&queryLocal[i]));
+        }
+
+        if (vectorSize % 2 == 1)
+        {
+            count += __popc(tex2D<unsigned int>(texObj, offset + vectorSize - 1, tu) ^ queryLocal[vectorSize - 1]);
+        }
+
+        unsigned int id = tu*vectorPerBlock + tv;
+
+        keyOutput[id] = count;
+        valueOutput[id] = id;
+    }
+}*/
+
+
 __global__ void distanceKernel(unsigned short* keyOutput, unsigned int *valueOutput, unsigned int *query, cudaTextureObject_t texObj, unsigned int texHeight)
 {
     int tu = blockIdx.x;
