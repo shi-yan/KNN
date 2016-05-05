@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     memset(matrixBuffer, 0xff, bufferSize * sizeof(unsigned int));
 
     // test data:
-    int offset = 500;
+    int offset = 1050;
     unsigned int diff = 0x1;
     for(int i = 0; i < 32;++i)
     {
@@ -77,6 +77,8 @@ int main(int argc, char *argv[])
         }
 
         matrixBuffer[25*(offset - i*7) + 8] = diff;
+
+        //offset += 1024;
     }
 
     unsigned int query[25] = {0};
