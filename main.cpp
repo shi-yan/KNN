@@ -10,9 +10,9 @@ const int vectorSize = 25;
 const int vectorPerBlock = 1024;
 const int testMatrixHeight = 16384;
 
-extern __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items, enum SortAlgorithm _sortAlgorithm);
-extern __host__ bool kNN_query(unsigned int query[vectorSize], unsigned int *result, const unsigned int resultCount);
-extern __host__ void kNN_cleanUp();
+extern bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items, enum SortAlgorithm _sortAlgorithm);
+extern bool kNN_query(unsigned int query[vectorSize], unsigned int *result, const unsigned int resultCount);
+extern void kNN_cleanUp();
 
 int main(int argc, char *argv[])
 {
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         //offset += 1024;
     }
 
-    unsigned int query[25] = {0};
+    unsigned int query[vectorSize] = {0};
     query[10] = 0x1;
     // ------------
 

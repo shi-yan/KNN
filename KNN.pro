@@ -36,7 +36,8 @@ else {
 }
 
 DISTFILES += \
-    Kernels.cu
+    Kernels.cu \
+    Makefile
 
 LIBS += -L/usr/local/cuda-7.5/lib64 \
         -lcudart \

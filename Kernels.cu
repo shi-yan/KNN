@@ -83,54 +83,54 @@ __global__ void distanceKernel(unsigned short* keyOutput, unsigned int *valueOut
 
 static enum SortAlgorithm sortAlgorithm = CUB_RADIX_SORT;
 static int texHeight = 0;
-static cudaArray *matrixArray_device = 0;
+static cudaArray *d_matrixArray = 0;
 static cudaTextureObject_t matrixTexObj = 0;
-static unsigned int *query_device = 0;
-static unsigned short *keyResultArray_device = 0;
-static unsigned int *valueResultArray_device = 0;
+static unsigned int *d_query = 0;
+static unsigned short *d_keyResultArray = 0;
+static unsigned int *d_valueResultArray = 0;
 static size_t  tempStorageBytes  = 0;
 static void    *tempStorage_device     = NULL;
-static cub::DoubleBuffer<unsigned short> keys_device;
-static cub::DoubleBuffer<unsigned int> values_device;
+static cub::DoubleBuffer<unsigned short> d_keys;
+static cub::DoubleBuffer<unsigned int> d_values;
 static mgpu::standard_context_t *context;
 static unsigned int num_items = 0;
 
 
-__host__ void kNN_cleanUp()
+void kNN_cleanUp()
 {
     if (matrixTexObj)
     {
         cudaDestroyTextureObject(matrixTexObj);
     }
 
-    if (matrixArray_device)
+    if (d_matrixArray)
     {
-        cudaFreeArray(matrixArray_device);
+        cudaFreeArray(d_matrixArray);
     }
 
-    if (query_device)
+    if (d_query)
     {
-        cudaFree(query_device);
+        cudaFree(d_query);
     }
 
-    if (keys_device.d_buffers[0] || keys_device.d_buffers[1])
+    if (d_keys.d_buffers[0] || d_keys.d_buffers[1])
     {
-        cudaFree(keys_device.d_buffers[0]);
-        cudaFree(keys_device.d_buffers[1]);
+        cudaFree(d_keys.d_buffers[0]);
+        cudaFree(d_keys.d_buffers[1]);
     }
-    else if(keyResultArray_device)
+    else if(d_keyResultArray)
     {
-        cudaFree(keyResultArray_device);
+        cudaFree(d_keyResultArray);
     }
 
-    if (values_device.d_buffers[0] || values_device.d_buffers[1])
+    if (d_values.d_buffers[0] || d_values.d_buffers[1])
     {
-        cudaFree(values_device.d_buffers[0]);
-        cudaFree(values_device.d_buffers[1]);
+        cudaFree(d_values.d_buffers[0]);
+        cudaFree(d_values.d_buffers[1]);
     }
-    else if(valueResultArray_device)
+    else if(d_valueResultArray)
     {
-        cudaFree(valueResultArray_device);
+        cudaFree(d_valueResultArray);
     }
 
     if (tempStorage_device)
@@ -146,7 +146,7 @@ __host__ void kNN_cleanUp()
 }
 
 
-__host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items, enum SortAlgorithm _sortAlgorithm)
+bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items, enum SortAlgorithm _sortAlgorithm)
 {
     cudaError error = cudaSuccess;
 
@@ -162,7 +162,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
     struct cudaTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
 
-    error = cudaMallocArray(&matrixArray_device, &channelDesc, vectorSize * vectorPerBlock, texHeight);
+    error = cudaMallocArray(&d_matrixArray, &channelDesc, vectorSize * vectorPerBlock, texHeight);
     if (cudaSuccess != error)
     {
         printf("can't allocate matrixArray [%u]\n", error);
@@ -170,7 +170,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
         return false;
     }
 
-    error = cudaMemcpyToArray(matrixArray_device, 0, 0, matrixBuffer, num_items * vectorSize * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    error = cudaMemcpyToArray(d_matrixArray, 0, 0, matrixBuffer, num_items * vectorSize * sizeof(unsigned int), cudaMemcpyHostToDevice);
     if (cudaSuccess != error)
     {
         printf("can't memcpy matrixArray [%u]\n", error);
@@ -180,7 +180,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
 
     // Specify texture
     resDesc.resType = cudaResourceTypeArray;
-    resDesc.res.array.array = matrixArray_device;
+    resDesc.res.array.array = d_matrixArray;
 
     // Specify texture object parameters
     texDesc.addressMode[0] = cudaAddressModeWrap;
@@ -198,7 +198,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
         return false;
     }
 
-    error = cudaMalloc(&query_device, sizeof(unsigned int) * vectorSize);
+    error = cudaMalloc(&d_query, sizeof(unsigned int) * vectorSize);
     if (cudaSuccess != error)
     {
         printf("can't allocate for query\n");
@@ -211,14 +211,14 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
     if (sortAlgorithm == CUB_RADIX_SORT)
     {
         cub::CachingDeviceAllocator cubAllocator(true);
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[0], sizeof(unsigned short) * num_items));
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&values_device.d_buffers[0], sizeof(unsigned int) * num_items));
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&keys_device.d_buffers[1], sizeof(unsigned short) * num_items));
-        CubDebugExit(cubAllocator.DeviceAllocate((void**)&values_device.d_buffers[1], sizeof(unsigned int) * num_items));
-        CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, keys_device, values_device, num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&d_keys.d_buffers[0], sizeof(unsigned short) * num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&d_values.d_buffers[0], sizeof(unsigned int) * num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&d_keys.d_buffers[1], sizeof(unsigned short) * num_items));
+        CubDebugExit(cubAllocator.DeviceAllocate((void**)&d_values.d_buffers[1], sizeof(unsigned int) * num_items));
+        CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, d_keys, d_values, num_items));
 
-        keyResultArray_device = keys_device.d_buffers[0];
-        valueResultArray_device = values_device.d_buffers[0];
+        d_keyResultArray = d_keys.d_buffers[0];
+        d_valueResultArray = d_values.d_buffers[0];
 
         // Allocate temporary storage
         CubDebugExit(cubAllocator.DeviceAllocate(&tempStorage_device, tempStorageBytes));
@@ -227,7 +227,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
     {
         context = new mgpu::standard_context_t;
 
-        error = cudaMalloc(&keyResultArray_device, sizeof(unsigned short) * num_items);
+        error = cudaMalloc(&d_keyResultArray, sizeof(unsigned short) * num_items);
         if (cudaSuccess != error)
         {
             printf("can't allocate for key\n");
@@ -235,7 +235,7 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
             return false;
         }
 
-        error = cudaMalloc(&valueResultArray_device, sizeof(unsigned short) * num_items);
+        error = cudaMalloc(&d_valueResultArray, sizeof(unsigned short) * num_items);
         if (cudaSuccess != error)
         {
             printf("can't allocate for value\n");
@@ -248,9 +248,9 @@ __host__ bool kNN_init(unsigned int *matrixBuffer, const unsigned int _num_items
 
 }
 
-__host__ bool kNN_query(unsigned int query[vectorSize], unsigned int *result, const unsigned int resultCount)
+bool kNN_query(unsigned int query[vectorSize], unsigned int *result, const unsigned int resultCount)
 {
-    cudaError error = cudaMemcpy(query_device, query, sizeof(unsigned int) * vectorSize, cudaMemcpyHostToDevice);
+    cudaError error = cudaMemcpy(d_query, query, sizeof(unsigned int) * vectorSize, cudaMemcpyHostToDevice);
     if (cudaSuccess != error)
     {
         printf("can't memcpy query\n");
@@ -258,21 +258,19 @@ __host__ bool kNN_query(unsigned int query[vectorSize], unsigned int *result, co
         return false;
     }
 
-    distanceKernel<<<texHeight, vectorPerBlock>>>(keyResultArray_device, valueResultArray_device, query_device, matrixTexObj, texHeight);
+    distanceKernel<<<texHeight, vectorPerBlock>>>(d_keyResultArray, d_valueResultArray, d_query, matrixTexObj, texHeight);
     if (sortAlgorithm == MGPU_MERGE_SORT)
     {
-        mgpu::mergesort(keyResultArray_device, valueResultArray_device, num_items, mgpu::less_t<unsigned int>(), *context);
-        cudaDeviceSynchronize();
+        mgpu::mergesort(d_keyResultArray, d_valueResultArray, num_items, mgpu::less_t<unsigned int>(), *context);
         context->synchronize();
-        cudaMemcpy(result,valueResultArray_device, sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
+        cudaMemcpy(result,d_valueResultArray, sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
     }
     else if (sortAlgorithm == CUB_RADIX_SORT)
     {
-        keys_device.selector = values_device.selector = 0;
+        d_keys.selector = d_values.selector = 0;
         // Run
-        CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, keys_device, values_device, num_items));
-        cudaDeviceSynchronize();
-        cudaMemcpy(result, values_device.Current(), sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
+        CubDebugExit(cub::DeviceRadixSort::SortPairs(tempStorage_device, tempStorageBytes, d_keys, d_values, num_items));
+        cudaMemcpy(result, d_values.Current(), sizeof(unsigned int) * resultCount, cudaMemcpyDeviceToHost);
     }
 
     return true;
